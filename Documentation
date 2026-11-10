@@ -1,0 +1,120 @@
+Status Center Azure migration: complete capture
+This combines your infrastructure walkthrough, the team’s story discussion, and your later GitHub, Terraform, and Azure walkthrough. It is a draft based on meeting narration and notes. Screen details, individual PRs, Terraform runs, and deployment outcomes need to be verified before being treated as a confirmed deployment record.
+
+1. Purpose and current position
+The team is preparing the Status Center migration from the data center to Azure. You described developing the Dev infrastructure using Terraform and preparing a knowledge-transfer session for developers.
+
+The distinction:
+
+Dev infrastructure: You reported that several Azure resources have been deployed.
+Application deployment: The initial image deployment to Dev AKS and accessibility check remain to be completed or verified.
+Other environments: Dev configuration was demonstrated. The production variables file shown in the later walkthrough was empty; the state of other environments needs verification.
+The team clarified that your role is to document the work, share knowledge, and support developers, not to perform all migration work alone.
+
+2. Dev infrastructure captured
+You identified the following resources in the Dev resource group:
+
+Resource	Purpose	Status captured
+Azure Kubernetes Service (AKS)	Runs containerized workloads	You reported that the Dev cluster is deployed.
+Azure Container Registry (ACR)	Stores container images	You reported that it exists; images and AKS pull access were not confirmed.
+Key Vault	Stores secrets	You reported that it exists.
+Azure Managed Redis	Provides managed caching	You reported that it exists.
+Managed identity	Provides Azure identity for supported access	You reported that it exists; its exact use needs confirmation.
+Log Analytics workspace	Supports collection and analysis of configured logs and telemetry	You reported that it exists; monitoring configuration is not confirmed.
+Data collection resources, private endpoint, and network interface	Support monitoring or connectivity, depending on configuration	Mentioned in the initial walkthrough; exact configuration and provisioning source need verification.
+The resource list shows what you described seeing. Resource presence alone does not establish which Terraform run created or changed it, or whether the application is operational.
+
+3. Terraform and repository walkthrough
+You described the following:
+
+A GitHub repository with a main branch and a feature branch, described as feature-test.
+Multiple PRs containing Dev infrastructure changes, later merged toward a development branch.
+A main.tf file with modules for Key Vault, Log Analytics, Container Registry, managed Redis, and AKS.
+A variables.tf file containing variables such as environment topology, mandatory tags, resource-group name, address prefixes, location, Redis SKU, and AKS availability zones.
+A dev.tfvars file containing Dev-specific configuration.
+A providers.tf file.
+Changes across PRs involving address prefixes, network security rules, Terraform configuration, and an AKS autoscaler setting. The exact change in each PR was not established from the narration.
+Terraform runs associated with merged PRs. You described automatic planning and clicking a run action, but the exact trigger, approval, apply behavior, and run outcome need confirmation.
+The organization’s stated rule is that infrastructure changes go through automation and Terraform, rather than manual deployment.
+
+What to verify for an end-to-end example
+Select one completed Dev change and link:
+
+PR: Purpose, changed files, base branch, reviewers, checks, approvals, and merged revision.
+Terraform run: Correct workspace, trigger, plan, approval, apply outcome, and resource actions.
+Azure verification: The affected resource and evidence that the intended change took effect.
+Ownership: What you personally changed, who reviewed or approved it, and who performed any required apply.
+Troubleshooting: Any actual failure, investigation, and verified resolution.
+Terraform orders resources according to defined dependencies. Log Analytics is not automatically a prerequisite for every resource; check the actual configuration before documenting dependencies.
+
+4. Team discussion and story decisions
+The five migration stories were reviewed in preparation for refinement. The team will agree on scope, acceptance criteria, and story points together.
+
+A. AKS subnet and IP ranges
+You stated that Cloud has assigned IP ranges for four environments.
+The team clarified that Cloud, not the application team, provides those assignments.
+Verify and document each environment’s range and the available request or approval evidence.
+Review whether the existing story can close. Track any remaining subnet or cluster work separately.
+B. Terraform resource work
+Break the resource work into subtasks so the team can track individual pieces, such as Key Vault or Log Analytics.
+Capture actual dependencies and distinguish completed work from work still needed.
+Use this as a Terraform KT opportunity. Developers—and interested testers where appropriate—can take individual pieces with your support.
+Confirm the approved access and approval process before people make changes.
+C. Infrastructure and application monitoring
+Dynatrace is the preferred monitoring solution.
+Shakti, the assigned SRE, handles monitoring configuration and alert setup.
+The team can view Dynatrace and create dashboards; alert configuration remains with Shakti.
+Proposed signals include:
+AKS node and control-plane health.
+Pod readiness and restarts.
+CPU and memory usage.
+API availability and application metrics.
+Event-processing failures or lag.
+Work with Shakti to confirm integration, available signals, thresholds, alert recipients, ownership, and how alerts will be tested.
+Document the confirmed monitoring setup in Confluence. The existence of Log Analytics does not prove monitoring is configured.
+D. Azure resource groups
+Verify the resource-group names and what exists across all four environments.
+Confirm ownership, provisioning approach, and required cost tags.
+You mentioned seeing existing resource groups and not having sufficient activity-log access to establish their history. Do not assume they were created through Terraform until verified.
+Document how missing groups would be provisioned; track any actual provisioning separately if needed.
+E. CI/CD and application deployment
+The agreed starting point is small: deploy an image to the Dev AKS cluster and verify that it is accessible.
+Jenkins for CI and FluxCD for deployment were discussed as the intended approach; their configuration and ownership remain unverified.
+Confirm build inputs, image publishing, registry access, deployment configuration, and workload health as the delivery path is established.
+Another cloud application’s pipeline was suggested as a reference. Verify its configuration and ownership before adopting it.
+UAT can follow Dev after checking environment-specific configuration, access, and approvals.
+Document verified troubleshooting and rollback procedures as they become available.
+5. Developer access
+The discussion distinguished several separate access needs:
+
+Azure resource visibility: Potentially read access to inspect resources.
+Container Registry: Access appropriate to the developer’s image-related tasks.
+AKS: Cluster authentication and the required namespace or pod permissions.
+Terraform: Repository contribution, workspace access, and apply permissions are separate decisions.
+Developers can potentially contribute through reviewed repository changes without automatically receiving Terraform workspace or apply access. Confirm the minimum permissions, network or jump-server requirements, approvals, and access process with the cloud team.
+
+6. Confluence documentation requested
+The team asked you to move your drafts into the shared Confluence location, organized under an Azure section, and share them for team review and maintenance.
+
+Suggested structure:
+
+Overview: Migration scope, architecture, and current status.
+Environment inventory: Resource groups, IP ranges, resources, owners, and cost tags for all four environments.
+Dev resources: Purpose and verified configuration of each deployed resource.
+Terraform workflow: Repository structure and one evidenced PR-to-plan-to-apply-to-verification walkthrough.
+AKS infrastructure provisioning: How the cluster is provisioned and verified.
+Application deployment to AKS: Separate from infrastructure; document the delivery path as it is confirmed.
+Developer access: Approved permissions and request process.
+Monitoring: Confirmed Dynatrace signals, alerts, recipients, and ownership.
+Troubleshooting and runbook: Issues encountered and verified resolutions.
+Status and Jira links: Clearly label items completed, pending, or unverified and link the related stories.
+7. Actions and refinement preparation
+Action	Owner or participants
+Move drafts into shared Confluence; document deployed, pending, and unverified work; link stories	You, with team review
+Verify four-environment IP ranges and request or approval evidence	You, with Cloud/team
+Verify resource-group names, ownership, provisioning method, and cost tags	You, with Cloud/team
+Prepare a Terraform KT using one completed Dev PR and matching run	You; developers participate
+Break Terraform resource work into trackable subtasks	Team during refinement
+Confirm Dynatrace integration, signals, thresholds, alerts, and ownership	You and Shakti
+Define and deliver the first accessible image in Dev AKS	Team; ownership and configuration to be confirmed
+Confirm minimum developer access	Team and Cloud
